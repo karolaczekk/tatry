@@ -1,4 +1,4 @@
-const CACHE = 'tatry-pwa-v1';
+const CACHE = 'tatry-pwa-v2-ios-ui';
 const APP_SHELL = [
   './',
   './index.html',
