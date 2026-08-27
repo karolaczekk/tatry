@@ -1,9 +1,14 @@
-const CACHE = 'tatry-pwa-v2-ios-ui';
+const CACHE = 'tatry-pwa-v3-icons-safari';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './icons/apple-touch-icon-180.png',
+  './favicon.ico',
+  './favicon-16x16.png',
+  './favicon-32x32.png',
+  './favicon-48x48.png',
+  './apple-touch-icon.png',
+  './icons/tatry-planer-apple-touch-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',

@@ -47,3 +47,7 @@ python3 -m http.server 8080
 ```
 
 Następnie otwórz `http://localhost:8080/`.
+
+## Safari / ikony po aktualizacji
+
+Paczka zawiera osobne `favicon.ico`, favicony PNG i `apple-touch-icon`, a odnośniki do ikon są wersjonowane (`?v=3`). Jeżeli Safari nadal pokazuje starą ikonę po deployu, usuń istniejącą zakładkę / ikonę z ekranu początkowego, zamknij Safari i dodaj ją ponownie po wejściu na nowo opublikowaną stronę. Safari potrafi długo przechowywać cache ikon dla tej samej domeny GitHub Pages.
