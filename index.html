@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1211">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tatry 7 dni">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="Tatry 7 dni">
+<meta name="description" content="Interaktywny planer 7-dniowego trekkingu w Tatrach na wrzesień 2026.">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
+<title>Tatry • 7 dni • wrzesień 2026 — planer trekkingowy</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root{
+    --bg:#0d1211;--panel:#151d1a;--panel2:#1b2621;--ink:#eff6f0;--muted:#a9b8af;
+    --accent:#9fe0ad;--accent2:#f1d585;--danger:#ff9b8f;--line:#2c3933;--blue:#9ec7ff;
+    --shadow:0 16px 44px rgba(0,0,0,.28);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);background:linear-gradient(180deg,#0b100f 0%,#111917 45%,#0d1211 100%);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  a{color:#b9d9ff;text-decoration-thickness:1px;text-underline-offset:3px}
+  .wrap{max-width:1180px;margin:auto;padding:0 20px 64px}
+  .hero{min-height:68vh;display:flex;align-items:flex-end;padding:70px 0 44px;position:relative;overflow:hidden}
+  .hero:before,.hero:after{content:"";position:absolute;pointer-events:none}
+  .hero:before{inset:0;background:radial-gradient(circle at 80% 20%,rgba(159,224,173,.16),transparent 35%),radial-gradient(circle at 15% 45%,rgba(158,199,255,.11),transparent 30%)}
+  .hero:after{height:210px;left:-5%;right:-5%;bottom:0;background:linear-gradient(150deg,transparent 0 31%,#1d2a24 31.3% 43%,transparent 43.3%),linear-gradient(25deg,transparent 0 45%,#17221e 45.3% 62%,transparent 62.3%);opacity:.78}
+  .hero-content{position:relative;z-index:2;max-width:880px}
+  .eyebrow{letter-spacing:.16em;text-transform:uppercase;font-size:.78rem;color:var(--accent);font-weight:800}
+  h1{font-size:clamp(2.7rem,7vw,6.2rem);line-height:.94;margin:.2em 0 .24em;letter-spacing:-.055em}
+  h1 span{color:var(--accent)}
+  .lead{font-size:clamp(1.05rem,2vw,1.34rem);max-width:790px;color:#d7e2db}
+  .chips{display:flex;flex-wrap:wrap;gap:9px;margin:24px 0 0}
+  .chip{border:1px solid var(--line);background:rgba(21,29,26,.8);backdrop-filter:blur(8px);padding:7px 11px;border-radius:999px;font-size:.9rem;color:#dfe9e3}
+  .sticky{position:sticky;top:0;z-index:1000;background:rgba(13,18,17,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);margin:0 -20px 36px;padding:9px 20px}
+  nav{max-width:1180px;margin:auto;display:flex;gap:8px;overflow:auto;scrollbar-width:none}
+  nav a{white-space:nowrap;text-decoration:none;color:#d9e5de;border:1px solid var(--line);border-radius:999px;padding:7px 11px;font-size:.88rem}
+  nav a:hover{background:var(--panel2)}
+  section{scroll-margin-top:72px;margin:42px 0}
+  h2{font-size:clamp(1.75rem,3vw,2.5rem);line-height:1.08;letter-spacing:-.025em;margin:0 0 12px}
+  h3{line-height:1.2;margin-top:0}
+  .sub{color:var(--muted);max-width:920px;margin:0 0 20px}
+  .callout{border:1px solid #495546;background:linear-gradient(130deg,rgba(159,224,173,.10),rgba(241,213,133,.04));padding:19px 20px;border-radius:18px;box-shadow:var(--shadow)}
+  .callout strong{color:var(--accent)}
+  .alert{border-color:#5c463e;background:linear-gradient(130deg,rgba(255,155,143,.09),rgba(255,255,255,.02))}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+  .card{grid-column:span 6;background:linear-gradient(180deg,var(--panel),#121a17);border:1px solid var(--line);border-radius:18px;padding:19px;box-shadow:var(--shadow)}
+  .card.third{grid-column:span 4}.card.full{grid-column:1/-1}
+  .muted{color:var(--muted)}
+  .tag{font-size:.76rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;border:1px solid var(--line);padding:5px 8px;border-radius:999px;display:inline-flex;align-items:center;gap:5px;margin:0 5px 5px 0}
+  .tag.sun{color:#ffe6a3}.tag.cloud{color:#cbdcff}.tag.tech{color:#ffc0b7}.tag.easy{color:#b9ebc4}.tag.flex{color:#c7edff}.tag.rain{color:#b7dcff}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}.stat{background:#0f1614;border:1px solid var(--line);padding:10px;border-radius:12px}.stat b{display:block;font-size:1.03rem}.stat small{color:var(--muted)}
+  details{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}summary{cursor:pointer;font-weight:750;color:#dbe8e0}summary::marker{color:var(--accent)}
+  .timeline{position:relative;margin-top:22px}.timeline:before{content:"";position:absolute;left:21px;top:12px;bottom:12px;width:2px;background:var(--line)}
+  .day{position:relative;margin:0 0 15px 52px;background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:16px 17px;transition:.2s ease}
+  .day:hover{transform:translateY(-1px);border-color:#43534a}.day:before{content:attr(data-day);position:absolute;left:-52px;top:13px;width:43px;height:43px;border-radius:50%;display:grid;place-items:center;background:#0e1513;border:2px solid var(--accent);font-weight:900;color:var(--accent)}
+  .day.rest:before{border-color:var(--blue);color:var(--blue)}.day .top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.day h3{margin:0 0 5px;font-size:1.18rem}
+  .score{font-size:.8rem;color:#dce8e0;white-space:nowrap;background:#101714;border:1px solid var(--line);border-radius:999px;padding:5px 8px}.route{font-weight:650;color:#d7e6dd}
+  .weather-box{display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start}select{width:100%;background:#111815;border:1px solid #45534c;color:var(--ink);padding:12px 13px;border-radius:12px;font:inherit}
+  .decision{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px}.decision .row{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}.decision .row:last-child{border:0}.dot{width:11px;height:11px;border-radius:50%;background:#607068;flex:0 0 auto;margin-top:6px}.row.good .dot{background:#7ce59a}.row.maybe .dot{background:#f0d37b}.row.no .dot{background:#ff8d83}.row.hidden{display:none}
+  .checkgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.check{display:flex;gap:9px;background:#111815;border:1px solid var(--line);border-radius:12px;padding:10px 11px;align-items:flex-start}.check input{margin-top:4px;accent-color:#88d99b}.check.done{opacity:.55;text-decoration:line-through}
+  .btnrow{display:flex;flex-wrap:wrap;gap:8px;margin:13px 0}.btn{appearance:none;border:1px solid #405047;background:#121b17;color:var(--ink);border-radius:10px;padding:9px 11px;cursor:pointer;font-weight:700}.btn:hover{background:#1b2822}.btn.accent{border-color:#548161;background:#193022;color:#dff7e5}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}th,td{padding:11px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}th{color:#b8c7be;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;background:#111815}tr:last-child td{border-bottom:0}.yes{color:#a7ecb8}.conditional{color:#ffe09b}.nope{color:#ffa397}
+  .source{font-size:.86rem;color:var(--muted)}.footer{border-top:1px solid var(--line);padding-top:24px;color:var(--muted);font-size:.9rem}
+  #map{height:min(72vh,720px);min-height:520px;border-radius:18px;border:1px solid var(--line);box-shadow:var(--shadow);overflow:hidden;background:#dce5dd}
+  .mapbar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 14px}.map-note{display:flex;gap:10px;align-items:flex-start;background:#101714;border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-top:12px}.map-note span:first-child{font-size:1.15rem}
+  .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#17201d;color:#eff6f0}.leaflet-popup-content{line-height:1.45}.leaflet-container a{color:#275c86}.place-icon{width:28px!important;height:28px!important;border-radius:50%;display:grid!important;place-items:center;background:#111815;border:2px solid #e7f4ea;box-shadow:0 5px 14px rgba(0,0,0,.3);font-size:15px}.base-icon{border-color:#9fe0ad}.parking-icon{border-color:#f1d585}.transport-icon{border-color:#9ec7ff}
+  .raincards .card{border-color:#334b5f;background:linear-gradient(180deg,#14202a,#11191e)}
+  .hide{display:none!important}
+  @media(max-width:820px){.card,.card.third{grid-column:1/-1}.stats{grid-template-columns:repeat(2,1fr)}.weather-box{grid-template-columns:1fr}.checkgrid{grid-template-columns:1fr}.day .top{display:block}.score{display:inline-block;margin-top:5px}#map{min-height:470px}}
+  @media print{body{background:#fff;color:#111}.sticky,.btnrow,.mapbar{display:none}.card,.day,.callout,table{box-shadow:none;background:#fff;border-color:#bbb}.muted,.sub,.source{color:#555}.hero{min-height:auto;padding:25px 0}.hero:before,.hero:after{display:none}a{color:#111}.timeline:before{background:#bbb}#map{height:520px;box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero"><div class="hero-content">
+  <div class="eyebrow">Wrzesień 2026 · 2 osoby · 7 dni · Tatry polskie i słowackie</div>
+  <h1>Tatrzański <span>tydzień</span></h1>
+  <p class="lead">Plan trekkingowy nastawiony na szerokie panoramy, długie przejścia graniowe i stopniowe zwiększanie trudności. Sześć wyjść, jeden dzień buforowy oraz gotowe warianty na chmury, lekki deszcz i zmianę planu.</p>
+  <div class="chips"><span class="chip">🥾 dobra kondycja</span><span class="chip">🏔️ priorytet: grań + widoki</span><span class="chip">☀️ trudne szlaki tylko na sucho</span><span class="chip">🗺️ wspólna mapa wszystkich tras</span><span class="chip">🛟 Babia Góra jako plan KGP</span></div>
+</div></header>
+</div>
+<div class="sticky"><nav>
+  <a href="#zalozenia">Założenia</a><a href="#kolejnosc">Plan 7 dni</a><a href="#trasy">Trasy</a><a href="#pogoda">Pogoda</a><a href="#deszcz">Lekki deszcz</a><a href="#mapa">Mapa</a><a href="#alternatywy">Alternatywy</a><a href="#babia">Babia / KGP</a><a href="#checklist">Checklist</a><a href="#logistyka">Logistyka</a><a href="#zrodla">Źródła</a>
+</nav></div>
+<div class="wrap">
+
+<section id="zalozenia">
+  <h2>Założenia wyjazdu</h2>
+  <p class="sub">Plan zakłada dobrą wydolność i siłę, ale niewielkie doświadczenie w terenie wysokogórskim. Z tego powodu trudność techniczna rośnie stopniowo, a najbardziej eksponowana trasa znajduje się na końcu tygodnia i ma pełnoprawny zamiennik.</p>
+  <div class="grid">
+    <div class="card third"><h3>🏔️ Cel</h3><p>Jak najwięcej panoram i przejść grzbietami pomiędzy szczytami, bez dokładania trudności technicznej tylko dla samej trudności.</p></div>
+    <div class="card third"><h3>📈 Progresja</h3><p>Najpierw długie, łatwiejsze technicznie granie; następnie skała i ekspozycja; później łańcuchy; finał techniczny tylko przy pełnym komforcie.</p></div>
+    <div class="card third"><h3>🌦️ Elastyczność</h3><p>Kolejność jest bazowa. Najlepsze okno pogodowe dostają Rohacze, Kościelec i Szpiglasowy Wierch. Dzień buforowy można przesuwać.</p></div>
+  </div>
+  <div class="callout alert" style="margin-top:14px"><strong>Zasada tygodnia:</strong> prognoza 7-dniowa decyduje, czy wyjazd ma sens; konkretną trasę wybierajcie 24–48 godzin wcześniej i potwierdzajcie rano na podstawie wiatru, opadu, podstawy chmur, widzialności i komunikatów parków.</div>
+</section>
+
+<section id="kolejnosc">
+  <h2>Plan 7 dni — równomierne obciążenie</h2>
+  <p class="sub">Kolejność układa bodźce naprzemiennie: długa grań → technika → długa grań → regeneracja → technika → lżejszy dzień → finał. Przy pogodzie wszystkie dni można przesuwać.</p>
+  <div class="timeline">
+    <div class="day" data-day="1"><div class="top"><div><h3>Czerwone Wierchy</h3><div class="route">Kiry → Ciemniak → Krzesanica → Małołączniak → Kopa Kondracka → Kuźnice</div></div><span class="score">wysiłek 4/5 · technika 1.5/5</span></div><p class="muted">Długi dzień na otwartej grani i świetny pierwszy test tempa, jedzenia, ubioru oraz tolerancji na wysokość i wiatr.</p></div>
+    <div class="day" data-day="2"><div class="top"><div><h3>Kościelec</h3><div class="route">Kuźnice → Hala Gąsienicowa → Czarny Staw → Karb → Kościelec → Karb → Kuźnice</div></div><span class="score">wysiłek 3.5/5 · technika 3/5</span></div><p class="muted">Pierwszy dzień ze skałą, miejscami wymagającymi użycia rąk i wyraźniejszą ekspozycją. Wyłącznie na suchą skałę.</p></div>
+    <div class="day" data-day="3"><div class="top"><div><h3>Wołowiec przez Grzesia i Rakoń</h3><div class="route">Siwa Polana → Polana Chochołowska → Grześ → Rakoń → Wołowiec → Wyżnia Dolina Chochołowska → Siwa Polana</div></div><span class="score">wysiłek 4.5/5 · technika 2/5</span></div><p class="muted">Dużo kilometrów i dużo grani, ale bez technicznego skoku. Bardzo dobry dzień na wysokie chmury i dobrą widzialność.</p></div>
+    <div class="day rest" data-day="4"><div class="top"><div><h3>Bufor / regeneracja</h3><div class="route">sen · krótki spacer · termy · mobilność · przepakowanie · decyzja pogodowa</div></div><span class="score">obciążenie 0–1/5</span></div><p class="muted">Dzień do przesuwania. Jeśli któryś wcześniejszy termin wypada pogodowo, bufor przejmuje jego miejsce.</p></div>
+    <div class="day" data-day="5"><div class="top"><div><h3>Szpiglasowy Wierch</h3><div class="route">Palenica → Dolina Roztoki → 5 Stawów → Szpiglasowa Przełęcz → szczyt → Ceprostrada → Morskie Oko → Palenica</div></div><span class="score">wysiłek 5/5 · technika 3.5/5</span></div><p class="muted">Najdłuższy wysokogórski dzień po polskiej stronie. Odcinek z ubezpieczeniami pokonywany pod górę; zejście wygodniejszą Ceprostradą.</p></div>
+    <div class="day" data-day="6"><div class="top"><div><h3>Grań Goryczkowa i Kasprowy Wierch</h3><div class="route">Kuźnice → Hala Kondratowa → Przełęcz pod Kopą Kondracką → grań → Kasprowy → Kuźnice</div></div><span class="score">wysiłek 3/5 · technika 1.5/5</span></div><p class="muted">Lżejszy dzień przed finałem; bardzo dobry kandydat na pochmurne, ale suche warunki. Możliwość skrócenia zejścia kolejką.</p></div>
+    <div class="day" data-day="7"><div class="top"><div><h3>Rohacze</h3><div class="route">Zverovka → Zábrať → Rákoň → Volovec → Ostrý Roháč → Plačlivé → Smutné sedlo → Zverovka</div></div><span class="score">wysiłek 5/5 · technika 5/5</span></div><p class="muted">Finał techniczny: wąska skalna grań, duża ekspozycja i sztuczne ułatwienia. Dzień tylko na najlepsze okno pogodowe i po komfortowym przejściu wcześniejszych tras technicznych.</p></div>
+  </div>
+</section>
+
+<section id="trasy">
+  <h2>Główne trasy</h2>
+  <div class="grid">
+    <article class="card"><span class="tag cloud">🌥️ wysokie chmury OK</span><span class="tag easy">bez łańcuchów</span><h3>Czerwone Wierchy</h3><div class="stats"><div class="stat"><b>~15 km</b><small>dystans</small></div><div class="stat"><b>~8–9 h</b><small>czas</small></div><div class="stat"><b>~1400 m</b><small>podejścia</small></div><div class="stat"><b>1.5/5</b><small>technika</small></div></div><p>Cztery szczyty połączone długą, otwartą granią. Technicznie przystępna, ale mocno wystawiona na wiatr i nieprzyjemna w niskiej chmurze. Najlepszy dzień na rozpoczęcie tygodnia.</p><details><summary>Logistyka</summary><p>Auto zostawcie po stronie Zakopanego/Bystrego. Rano bus do Kir, po przejściu zejście do Kuźnic i powrót do auta. Prywatnym samochodem nie planujcie dojazdu do samych Kuźnic.</p></details></article>
+    <article class="card"><span class="tag sun">☀️ suche skały</span><span class="tag tech">skała / ekspozycja</span><h3>Kościelec</h3><div class="stats"><div class="stat"><b>~16 km</b><small>dystans</small></div><div class="stat"><b>~8 h</b><small>czas</small></div><div class="stat"><b>~1390 m</b><small>podejścia</small></div><div class="stat"><b>3/5</b><small>technika</small></div></div><p>Wybitny widokowo szczyt i najlepszy w planie pierwszy kontakt z bardziej skalnym terenem. Brak łańcuchów nie oznacza łatwego podejścia: są płyty, ekspozycja i miejsca wymagające pracy rękami.</p><details><summary>Punkt kontrolny</summary><p>Karb jest dobrym miejscem do oceny warunków. Mokra skała, silny wiatr lub dyskomfort na ekspozycji są powodem do powrotu bez szczytu.</p></details></article>
+    <article class="card"><span class="tag cloud">🌥️ wysokie chmury OK</span><span class="tag easy">dużo grani</span><h3>Wołowiec przez Grzesia i Rakoń</h3><div class="stats"><div class="stat"><b>~25–26 km</b><small>dystans</small></div><div class="stat"><b>~9–10 h</b><small>czas</small></div><div class="stat"><b>~1400 m</b><small>podejścia</small></div><div class="stat"><b>2/5</b><small>technika</small></div></div><p>Długi odcinek grzbietowy Grześ → Rakoń → Wołowiec daje dokładnie to, czego szukacie: otwartą przestrzeń i widokowe przejście pomiędzy szczytami bez sztucznych ułatwień.</p><details><summary>Tip na dolinę</summary><p>Droga przez Dolinę Chochołowską jest długa. Warto wystartować wcześnie; na dozwolonym odcinku doliny można też rozważyć rower zgodnie z aktualnymi zasadami i regulaminem wypożyczalni.</p></details></article>
+    <article class="card"><span class="tag sun">☀️ bardzo dobra pogoda</span><span class="tag tech">łańcuchy</span><h3>Szpiglasowy Wierch</h3><div class="stats"><div class="stat"><b>~24 km</b><small>dystans</small></div><div class="stat"><b>~9–10 h</b><small>czas</small></div><div class="stat"><b>~1470 m</b><small>podejścia</small></div><div class="stat"><b>3.5/5</b><small>technika</small></div></div><p>Jedna z najbardziej różnorodnych tras tygodnia: Dolina Pięciu Stawów, ubezpieczone podejście, szczyt, Ceprostrada i Morskie Oko. Najlepiej zachować ją na suchy dzień z dobrą widzialnością.</p><details><summary>Parking</summary><p>Parking TPN w rejonie Palenicy/Łysej Polany rezerwujcie z wyprzedzeniem. W sezonie przyjazd wcześnie rano daje większy zapas czasu i prostszą logistykę.</p></details></article>
+    <article class="card"><span class="tag cloud">🌥️ najlepszy na chmury</span><span class="tag flex">łatwo skrócić</span><h3>Grań Goryczkowa → Kasprowy</h3><div class="stats"><div class="stat"><b>~16 km</b><small>dystans</small></div><div class="stat"><b>~7–8 h</b><small>czas</small></div><div class="stat"><b>~1200 m</b><small>podejścia</small></div><div class="stat"><b>1.5/5</b><small>technika</small></div></div><p>Widokowy dzień graniowy o umiarkowanej trudności. Jeśli chmury są wysoko, a grań pozostaje widoczna, nie traci tak dużo jak Kościelec, Szpiglasowy czy Rohacze.</p><details><summary>Wariant regeneracyjny</summary><p>Jeśli nogi są ciężkie, zakończcie marsz na Kasprowym i zjedźcie kolejką zamiast schodzić pieszo do Kuźnic.</p></details></article>
+    <article class="card full"><span class="tag sun">☀️ najlepsze okno tygodnia</span><span class="tag tech">duża ekspozycja + łańcuchy</span><h3>Rohacze: Volovec → Ostrý Roháč → Plačlivé</h3><div class="stats"><div class="stat"><b>~21 km</b><small>dystans</small></div><div class="stat"><b>~9–10 h</b><small>czas</small></div><div class="stat"><b>~1500 m</b><small>podejścia</small></div><div class="stat"><b>5/5</b><small>technika w planie</small></div></div><p>Najbardziej alpejski charakter całego tygodnia: skalna grań, ekspozycja, ubezpieczenia i miejsca wymagające spokojnego, precyzyjnego poruszania się. To trasa opcjonalna, jeśli wcześniejsze dni potwierdzą pełny komfort na ekspozycji.</p><div class="callout"><strong>GO:</strong> sucha skała, niski wiatr, dobra widzialność, brak burz/frontu, duży zapas światła i obopólny komfort na ekspozycji. <strong>NO-GO:</strong> mokro, silny wiatr, niska chmura lub napięcie psychiczne już na wcześniejszych szlakach.</div></article>
+  </div>
+</section>
+
+<section id="pogoda">
+  <h2>Interaktywny dobór trasy do pogody</h2>
+  <p class="sub">„Pochmurno” oznacza tu wysoką podstawę chmur i dobrą widzialność. Niska chmura na grani to zupełnie inna sytuacja. Lekki deszcz oznacza spokojny opad bez burz, silnego wiatru i wezbranych potoków.</p>
+  <div class="weather-box">
+    <div><label for="wx"><b>Wybierz warunki:</b></label><select id="wx"><option value="sun">☀️ Słonecznie / świetna widzialność</option><option value="highcloud">🌥️ Wysokie chmury, sucho</option><option value="drizzle">🌦️ Lekki deszcz, bez burz</option><option value="lowcloud">🌫️ Niska chmura / mgła</option><option value="wind">💨 Silny wiatr</option><option value="wet">🌧️ Mocniejszy deszcz / mokra skała</option></select><p class="source">Filtr planistyczny — nie zastępuje bieżącego komunikatu pogodowego.</p></div>
+    <div class="decision" id="decision">
+      <div class="row" data-wx="sun highcloud"><span class="dot"></span><b>Czerwone Wierchy</b><span class="muted">— świetne przy słońcu, dobre przy wysokim zachmurzeniu.</span></div>
+      <div class="row" data-wx="sun"><span class="dot"></span><b>Kościelec</b><span class="muted">— zachować na suche skały i dobrą widzialność.</span></div>
+      <div class="row" data-wx="sun"><span class="dot"></span><b>Szpiglasowy Wierch</b><span class="muted">— długi dzień i ubezpieczenia; wymaga stabilnych warunków.</span></div>
+      <div class="row" data-wx="sun highcloud"><span class="dot"></span><b>Wołowiec / Grześ / Rakoń</b><span class="muted">— bardzo dobry kandydat na suchy, pochmurny dzień.</span></div>
+      <div class="row" data-wx="sun"><span class="dot"></span><b>Rohacze</b><span class="muted">— najlepsze okno tygodnia: sucho, mało wiatru, świetna widzialność.</span></div>
+      <div class="row" data-wx="sun highcloud"><span class="dot"></span><b>Baranec</b><span class="muted">— mniej techniczny, nadal mocno wystawiony na pogodę.</span></div>
+      <div class="row" data-wx="sun highcloud"><span class="dot"></span><b>Grań Goryczkowa / Kasprowy</b><span class="muted">— najlepszy główny wybór na wysokie chmury.</span></div>
+      <div class="row" data-wx="drizzle"><span class="dot"></span><b>Dolina Kościeliska → Hala Ornak</b><span class="muted">— szeroka dolina, brak ekspozycji; bez jaskiń i bocznych skalnych wariantów.</span></div>
+      <div class="row" data-wx="drizzle"><span class="dot"></span><b>Dolina Chochołowska → schronisko</b><span class="muted">— szeroka droga dolinna i prosty odwrót.</span></div>
+      <div class="row" data-wx="lowcloud wind wet"><span class="dot"></span><b>Regeneracja / bardzo niska trasa</b><span class="muted">— przy silnym wietrze, mgle lub mocniejszym deszczu nie przenoście planu na inną grań.</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="deszcz">
+  <h2>Dwie trasy na lekki deszcz</h2>
+  <p class="sub">To warianty o niższym ryzyku terenowym, nie „trasy bez ryzyka”. Warunek: brak burz, brak silnego wiatru, brak ostrzeżeń hydrologicznych i brak gwałtownie rosnącego poziomu potoków. W razie pogorszenia zawracacie.</p>
+  <div class="grid raincards">
+    <article class="card"><span class="tag rain">🌦️ lekki deszcz</span><span class="tag easy">niska ekspozycja</span><h3>Dolina Kościeliska → Hala Ornak</h3><div class="route">Kiry → Brama Kantaka → Stare Kościeliska → Polana Pisana → Schronisko na Hali Ornak → tą samą drogą</div><div class="stats"><div class="stat"><b>~11.2 km</b><small>tam i z powrotem</small></div><div class="stat"><b>~3.5–4 h</b><small>z zapasem</small></div><div class="stat"><b>~350 m</b><small>podejść łącznie</small></div><div class="stat"><b>1/5</b><small>technika</small></div></div><p>Duża część trasy biegnie szeroką doliną, często w lesie. W lekkim deszczu zachowuje sens krajobrazowy dzięki skałom, potokowi i bramom doliny.</p><details><summary>Czego nie dokładać w deszczu</summary><p>Omińcie jaskinie, Wąwóz Kraków i boczne warianty po mokrych skałach. Smreczyński Staw zostawcie jako opcję wyłącznie przy stabilnych warunkach i dobrym podłożu.</p></details></article>
+    <article class="card"><span class="tag rain">🌦️ lekki deszcz</span><span class="tag easy">prosty odwrót</span><h3>Dolina Chochołowska → Schronisko</h3><div class="route">Siwa Polana → Polana Huciska → Polana Trzydniówka → Polana Chochołowska → Schronisko → tą samą drogą</div><div class="stats"><div class="stat"><b>~12.6 km</b><small>od Siwej Polany</small></div><div class="stat"><b>~4 h</b><small>marsz</small></div><div class="stat"><b>~300 m</b><small>podejścia orient.</small></div><div class="stat"><b>1/5</b><small>technika</small></div></div><p>Szeroka droga, brak grani i łatwe skrócenie trasy w dowolnym momencie. To najbardziej konserwatywny górski spacer w całym planerze.</p><details><summary>Kiedy również odpuścić</summary><p>Burze, silny wiatr łamiący gałęzie, intensywny opad, wezbrane cieki lub oficjalne ostrzeżenia parku oznaczają dzień regeneracyjny zamiast trekkingu.</p></details></article>
+  </div>
+</section>
+
+<section id="mapa">
+  <h2>Interaktywna mapa całego wyjazdu</h2>
+  <p class="sub">Włączaj i wyłączaj warstwy, klikaj trasy oraz parkingi. Przebiegi są <b>orientacyjną mapą planistyczną po kluczowych punktach</b>, a nie nawigacją GPS. Przed wejściem na szlak korzystajcie z aktualnej mapy turystycznej/offline i oznakowania terenowego.</p>
+  <div class="mapbar">
+    <button class="btn accent" id="fitAll">Pokaż wszystko</button>
+    <button class="btn" data-fit="czerwone">Czerwone Wierchy</button><button class="btn" data-fit="koscielec">Kościelec</button><button class="btn" data-fit="wolowiec">Wołowiec</button><button class="btn" data-fit="szpiglas">Szpiglas</button><button class="btn" data-fit="goryczkowa">Goryczkowa</button><button class="btn" data-fit="rohacze">Rohacze</button>
+    <button class="btn" id="setBase">Ustaw własny nocleg na mapie</button>
+  </div>
+  <div id="map"></div>
+  <div class="map-note"><span>🗺️</span><div><b>Jak używać:</b> w prawym górnym rogu mapy są warstwy „Trasy główne”, „Alternatywy”, „Lekki deszcz” i „Parkingi / baza”. Przycisk „Ustaw własny nocleg” pozwala kliknąć dokładne miejsce zakwaterowania; pozycja zapisuje się w tej przeglądarce. Mapa bazowa wymaga połączenia z internetem.</div></div>
+</section>
+
+<section id="alternatywy">
+  <h2>Alternatywne pełne wyjścia</h2>
+  <div class="grid">
+    <article class="card"><span class="tag sun">zamiennik Rohaczy</span><span class="tag easy">mniej techniczny</span><h3>A1. Baranec → Smrek → Žiarske sedlo</h3><p><b>Žiarska dolina → Holý vrch → Baranec → Smrek → Žiarske sedlo → Žiarska chata → parking</b></p><div class="stats"><div class="stat"><b>~20 km</b><small>dystans</small></div><div class="stat"><b>~8 h</b><small>czas</small></div><div class="stat"><b>~1300 m</b><small>podejścia</small></div><div class="stat"><b>2.5/5</b><small>technika</small></div></div><p>Bardzo mocna opcja widokowo-graniowa po słowackiej stronie, bez technicznego poziomu Ostrego Rohacza. Najlepszy zamiennik finału, jeśli ekspozycja nie daje pełnego komfortu.</p></article>
+    <article class="card"><span class="tag cloud">słowacka grań</span><span class="tag flex">krótsza alternatywa</span><h3>A2. Brestová → Salatín</h3><p><b>Roháče–Spálená → Spálený žľab → Brestová → Salatín → powrót</b></p><div class="stats"><div class="stat"><b>~14–15 km</b><small>dystans</small></div><div class="stat"><b>~7–8 h</b><small>czas</small></div><div class="stat"><b>~1200 m</b><small>podejścia</small></div><div class="stat"><b>2.5/5</b><small>technika</small></div></div><p>Dobry pomost pomiędzy łatwiejszymi graniami a Rohaczami. Panoramiczny i wyraźnie mniej zobowiązujący niż Ostrý Roháč.</p></article>
+    <article class="card"><span class="tag sun">duża grań kondycyjna</span><span class="tag easy">bez sztucznych ułatwień</span><h3>A3. Trzydniowiański → Kończysty → Starorobociański</h3><p><b>Siwa Polana → Trzydniowiański → Kończysty → Starorobociański → Siwa Przełęcz → Dolina Starorobociańska → Siwa Polana</b></p><div class="stats"><div class="stat"><b>~22 km</b><small>dystans</small></div><div class="stat"><b>~10 h</b><small>czas</small></div><div class="stat"><b>~1600 m</b><small>podejścia</small></div><div class="stat"><b>2.5/5</b><small>technika</small></div></div><p>Najlepsza opcja, jeśli najbardziej spodoba Wam się długie chodzenie granią, a mniej skalna ekspozycja. Potężny dzień kondycyjny i bardzo szerokie panoramy.</p></article>
+  </div>
+</section>
+
+<section id="babia">
+  <h2>Babia Góra / Korona Gór Polski</h2>
+  <div class="grid"><div class="card"><h3>Najprostszy wariant</h3><p><b>Krowiarki → Sokolica → Kępa → Gówniak → Diablak → powrót tą samą granią.</b></p><p>Dobry start projektu KGP i technicznie prostszy dzień. Nadal sprawdzajcie wiatr — Babia jest bardzo odsłonięta.</p></div><div class="card"><h3>Pętla przez Markowe Szczawiny</h3><p><b>Krowiarki → Diablak → Brona → Markowe Szczawiny → Górny Płaj → Krowiarki.</b></p><p>Wariant bardziej urozmaicony; przed wyjściem potwierdźcie bieżącą dostępność wszystkich odcinków w komunikacie BgPN.</p></div></div>
+  <div class="callout" style="margin-top:14px"><strong>Rola w planie:</strong> Babia Góra jest alternatywą, gdy jej lokalna prognoza jest wyraźnie lepsza od tatrzańskiej albo gdy chcecie zamienić bardzo trudny dzień na prostszy technicznie. Nie jest automatycznym wyborem na silny wiatr lub front.</div>
+</section>
+
+<section id="checklist">
+  <h2>Checklist trekkingowy</h2><p class="sub">Zaznaczenia zapisują się lokalnie w przeglądarce.</p>
+  <div class="btnrow"><button class="btn accent" id="markAll">Zaznacz wszystko</button><button class="btn" id="resetChecks">Reset checklisty</button><button class="btn" onclick="window.print()">Drukuj / zapisz PDF</button></div>
+  <div class="checkgrid" id="checks">
+    <label class="check"><input type="checkbox" data-key="shoes"><span><b>Rozchodzone buty z dobrym bieżnikiem</b><br><span class="muted">żadnego testowania nowego obuwia na Kościelcu czy Szpiglasie.</span></span></label>
+    <label class="check"><input type="checkbox" data-key="shell"><span><b>Kurtka przeciwdeszczowa + warstwa termiczna</b><br><span class="muted">wrzesień na 2000 m może być zimny mimo dobrej pogody.</span></span></label>
+    <label class="check"><input type="checkbox" data-key="hat"><span><b>Czapka + cienkie rękawiczki</b><br><span class="muted">szczególnie ważne przy wietrze na grani.</span></span></label>
+    <label class="check"><input type="checkbox" data-key="water"><span><b>Woda + jedzenie na cały dzień</b><br><span class="muted">regularnie jedzcie małe porcje zamiast jednego dużego postoju.</span></span></label>
+    <label class="check"><input type="checkbox" data-key="poles"><span><b>Kijki trekkingowe</b><br><span class="muted">pomagają na długich zejściach; chowajcie je na odcinkach wymagających rąk.</span></span></label>
+    <label class="check"><input type="checkbox" data-key="headlamp"><span><b>Czołówka dla każdego</b><br><span class="muted">awaryjnie; nie służy do planowania powrotu po zmroku.</span></span></label>
+    <label class="check"><input type="checkbox" data-key="power"><span><b>Powerbank + kabel</b><br><span class="muted">GPS, zdjęcia i niska temperatura skracają czas pracy baterii.</span></span></label>
+    <label class="check"><input type="checkbox" data-key="map"><span><b>Mapa offline + drugi backup</b><br><span class="muted">telefon partnera, papierowa mapa lub drugi zapis GPX.</span></span></label>
+    <label class="check"><input type="checkbox" data-key="aid"><span><b>Mini apteczka + NRC</b><br><span class="muted">otarcia, plastry, bandaż, środki osobiste, folia termiczna.</span></span></label>
+    <label class="check"><input type="checkbox" data-key="apps"><span><b>RATUNEK + aplikacja HZS</b><br><span class="muted">skonfigurujcie przed pierwszym wyjściem.</span></span></label>
+    <label class="check"><input type="checkbox" data-key="insurance"><span><b>Ubezpieczenie na Słowację</b><br><span class="muted">z pokryciem kosztów ratownictwa górskiego.</span></span></label>
+    <label class="check"><input type="checkbox" data-key="tickets"><span><b>Bilety / parking / dokumenty</b><br><span class="muted">Palenica: rezerwacja parkingu; dokument tożsamości na Słowację.</span></span></label>
+  </div>
+</section>
+
+<section id="logistyka">
+  <h2>Logistyka i trekkingowe tipy</h2>
+  <div class="grid">
+    <div class="card"><h3>1. Start wcześniej, nie szybciej</h3><p>Na 9–10-godzinne trasy przewagę daje wczesny start, nie gonienie tempa. Zostawcie 60–90 minut rezerwy przed końcem legalnego czasu poruszania się po szlakach.</p></div>
+    <div class="card"><h3>2. Jedzenie w rytmie</h3><p>Mała porcja co 60–90 minut zwykle działa lepiej niż jeden duży postój. Na najdłuższych dniach miejcie awaryjne 400–600 kcal, których nie planujecie zjadać.</p></div>
+    <div class="card"><h3>3. Pijcie zanim chce się pić</h3><p>Przy chłodzie łatwo zapomnieć o wodzie. Ilość dopasujcie do temperatury i możliwości uzupełniania; nie zakładajcie, że każdy potok jest bezpiecznym źródłem.</p></div>
+    <div class="card"><h3>4. Kuźnice</h3><p>Na odcinku od ronda do Kuźnic obowiązują ograniczenia ruchu. Najwygodniej zostawić samochód w rejonie Bystrego/Zakopanego i korzystać z komunikacji lub taxi.</p></div>
+    <div class="card"><h3>5. Morskie Oko / Palenica</h3><p>Parking TPN rezerwujcie online z wyprzedzeniem. Przy długiej trasie Szpiglasowego przyjedźcie z dużym zapasem względem planowanego startu.</p></div>
+    <div class="card"><h3>6. Zasada partnerska</h3><p>Każda osoba ma prawo zakończyć próbę bez dyskusji. Na ekspozycji decyzja „wracamy” nie wymaga większości.</p></div>
+    <div class="card"><h3>7. Wrzesień = warstwy</h3><p>Na dole może być kilkanaście stopni, a na grani zimny wiatr. Ubiór warstwowy i suche rękawiczki ważą mało, a potrafią uratować komfort dnia.</p></div>
+    <div class="card"><h3>8. Mokra skała zmienia skalę trudności</h3><p>Kościelec, Szpiglasowy i Rohacze po opadzie traktujcie jak inne trasy niż w suchym dniu. Dobra kondycja nie kompensuje utraty tarcia.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Szybka macierz pogodowa</h2>
+  <div style="overflow:auto"><table><thead><tr><th>Trasa</th><th>Największy plus</th><th>Słaby punkt</th><th>Pochmurno, sucho?</th><th>Priorytet na słońce</th></tr></thead><tbody>
+    <tr><td>Czerwone Wierchy</td><td>długa grań i 4 szczyty</td><td>wiatr / mgła</td><td class="yes">TAK, przy wysokiej chmurze</td><td>★★★☆☆</td></tr>
+    <tr><td>Kościelec</td><td>skalny klimat i panorama</td><td>mokra skała / ekspozycja</td><td class="conditional">lepiej przełożyć</td><td>★★★★★</td></tr>
+    <tr><td>Wołowiec</td><td>Grześ–Rakoń–Wołowiec</td><td>długa dolina</td><td class="yes">TAK</td><td>★★★★☆</td></tr>
+    <tr><td>Szpiglasowy</td><td>5 Stawów + szczyt + Morskie Oko</td><td>długość + łańcuchy</td><td class="conditional">lepiej przełożyć</td><td>★★★★★</td></tr>
+    <tr><td>Goryczkowa / Kasprowy</td><td>widokowa, łatwa do skrócenia</td><td>mniej dziki charakter</td><td class="yes">NAJLEPSZY wybór</td><td>★★★☆☆</td></tr>
+    <tr><td>Rohacze</td><td>najbardziej alpejski dzień</td><td>ekspozycja / łańcuchy / wiatr</td><td class="nope">NIE</td><td>★★★★★+</td></tr>
+    <tr><td>Baranec</td><td>długa słowacka grań</td><td>strome podejście / wiatr</td><td class="yes">TAK, przy dobrej widzialności</td><td>★★★★☆</td></tr>
+    <tr><td>Kościeliska → Ornak</td><td>niska ekspozycja</td><td>mokre kamienie / potoki</td><td class="yes">TAK + lekki deszcz</td><td>★☆☆☆☆</td></tr>
+    <tr><td>Chochołowska → schronisko</td><td>szeroka droga i prosty odwrót</td><td>długi marsz doliną</td><td class="yes">TAK + lekki deszcz</td><td>★☆☆☆☆</td></tr>
+    <tr><td>Babia Góra</td><td>KGP + prosta technicznie</td><td>silny wiatr / mgła</td><td class="yes">TAK, jeśli lokalnie stabilnie</td><td>★★★☆☆</td></tr>
+  </tbody></table></div>
+</section>
+
+<section id="zrodla">
+  <h2>Źródła do sprawdzenia przed wyjazdem</h2>
+  <p class="sub">Parametry są orientacyjne i zależą od dokładnego wariantu, parkingu, tempa i przerw. Aktualne zamknięcia i warunki mają pierwszeństwo przed planerem.</p>
+  <div class="grid">
+    <div class="card third"><h3>TPN</h3><p><a href="https://tpn.gov.pl/turystyka-piesza" target="_blank">Turystyka piesza i ograniczenia</a><br><a href="https://tpn.gov.pl/dojazd" target="_blank">Dojazd do Kuźnic</a><br><a href="https://tpn.gov.pl/parkingi-morskie-oko" target="_blank">Parkingi Morskie Oko</a><br><a href="https://tpn.gov.pl/zwiedzaj" target="_blank">Bieżący komunikat turystyczny</a></p></div>
+    <div class="card third"><h3>TANAP / HZS</h3><p><a href="https://www.tanap.sk/pesia-turistika/" target="_blank">Zasady turystyki pieszej TANAP</a><br><a href="https://slovakia.travel/na-ostry-rohac-2088-mnm-a-placlive-2125-mnm-zapadne-tatry" target="_blank">Ostrý Roháč i Plačlivé</a><br><a href="https://app.hzs.sk/" target="_blank">Aplikacja HZS</a></p></div>
+    <div class="card third"><h3>Mapy i parametry</h3><p><a href="https://mapa-turystyczna.pl/" target="_blank">Mapa Turystyczna</a><br><a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a><br><a href="https://leafletjs.com/" target="_blank">Leaflet — silnik mapy w planerze</a></p></div>
+    <div class="card third"><h3>Babia Góra</h3><p><a href="https://bgpn.gov.pl/turystyka-piesza" target="_blank">BgPN — turystyka piesza</a><br><a href="https://bgpn.gov.pl/" target="_blank">Bieżące komunikaty</a></p></div>
+    <div class="card third"><h3>Ratownictwo</h3><p><a href="https://topr.pl/" target="_blank">TOPR</a><br><a href="https://app.hzs.sk/" target="_blank">Horská záchranná služba</a></p></div>
+    <div class="card third"><h3>Przed każdym wyjściem</h3><p>Sprawdźcie osobno: opad, porywy wiatru na wysokości, podstawę chmur, temperaturę odczuwalną, komunikaty o zamknięciach oraz godzinę zmierzchu.</p></div>
+  </div>
+</section>
+
+<div class="footer"><b>Plan w jednym zdaniu:</b> maksymalizujcie pogodę na Rohacze, Kościelec i Szpiglasowy, wykorzystujcie Czerwone Wierchy, Wołowiec i Goryczkową przy wysokich chmurach, a przy lekkim deszczu przenoście dzień do Kościeliskiej lub Chochołowskiej zamiast na skałę i grań.</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // Weather selector
+  const wx=document.getElementById('wx');
+  const rows=[...document.querySelectorAll('#decision .row')];
+  function applyWeather(){
+    const v=wx.value;
+    rows.forEach(r=>{
+      const ok=r.dataset.wx.split(' ').includes(v);
+      r.classList.toggle('hidden',!ok);
+      r.classList.remove('good','maybe','no');
+      if(v==='sun') r.classList.add('good');
+      else if(v==='highcloud'||v==='drizzle') r.classList.add('maybe');
+      else r.classList.add('no');
+    });
+  }
+  wx.addEventListener('change',applyWeather);applyWeather();
+
+  // Checklist
+  const boxes=[...document.querySelectorAll('#checks input[type=checkbox]')];
+  boxes.forEach(b=>{
+    b.checked=localStorage.getItem('tatry_'+b.dataset.key)==='1';
+    b.closest('.check').classList.toggle('done',b.checked);
+    b.addEventListener('change',()=>{localStorage.setItem('tatry_'+b.dataset.key,b.checked?'1':'0');b.closest('.check').classList.toggle('done',b.checked);});
+  });
+  document.getElementById('markAll').addEventListener('click',()=>boxes.forEach(b=>{b.checked=true;b.dispatchEvent(new Event('change'));}));
+  document.getElementById('resetChecks').addEventListener('click',()=>boxes.forEach(b=>{b.checked=false;b.dispatchEvent(new Event('change'));}));
+
+  // Interactive trip map
+  const map=L.map('map',{scrollWheelZoom:false}).setView([49.25,19.88],10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+  map.on('click',()=>map.scrollWheelZoom.enable());
+
+  const mainGroup=L.layerGroup().addTo(map), altGroup=L.layerGroup().addTo(map), rainGroup=L.layerGroup().addTo(map), placeGroup=L.layerGroup().addTo(map);
+  const routeLayers={};
+  const routes=[
+    {id:'czerwone',name:'Czerwone Wierchy',group:'main',color:'#e36a5c',pts:[[49.2770,19.8649],[49.2595,19.8880],[49.2440,19.8955],[49.2368,19.9005],[49.2335,19.9105],[49.23586,19.91921],[49.2363,19.9350],[49.2445,19.9480],[49.2540,19.9555],[49.2691,19.9818]]},
+    {id:'koscielec',name:'Kościelec',group:'main',color:'#ffb347',pts:[[49.2691,19.9818],[49.2555,19.9940],[49.2435,20.0070],[49.2320,20.0145],[49.2268,20.0040],[49.2253,20.0144],[49.2268,20.0040],[49.2380,20.0020],[49.2435,20.0070],[49.2691,19.9818]]},
+    {id:'wolowiec',name:'Wołowiec przez Grzesia i Rakoń',group:'main',color:'#7bc96f',pts:[[49.2828,19.8426],[49.2596,19.8155],[49.2398,19.8061],[49.2364,19.7938],[49.2280,19.7655],[49.2175,19.7595],[49.2072,19.7667],[49.2209,19.7865],[49.2364,19.7938],[49.2596,19.8155],[49.2828,19.8426]]},
+    {id:'szpiglas',name:'Szpiglasowy Wierch',group:'main',color:'#4aa3df',pts:[[49.2557,20.1023],[49.2420,20.0875],[49.2260,20.0680],[49.2123,20.0415],[49.1974,20.0410],[49.1955,20.0370],[49.1974,20.0410],[49.2008,20.0540],[49.2016,20.0707],[49.2300,20.0870],[49.2557,20.1023]]},
+    {id:'goryczkowa',name:'Grań Goryczkowa → Kasprowy',group:'main',color:'#a884e8',pts:[[49.2691,19.9818],[49.2540,19.9555],[49.2385,19.9465],[49.2340,19.9520],[49.2330,19.9650],[49.2319,19.9817],[49.2475,19.9710],[49.2691,19.9818]]},
+    {id:'rohacze',name:'Rohacze',group:'main',color:'#f05d7b',pts:[[49.2486,19.7106],[49.2385,19.7045],[49.2260,19.7210],[49.2175,19.7595],[49.2072,19.7667],[49.2006,19.7575],[49.20056,19.75750],[49.1915,19.7475],[49.1840,19.7350],[49.2210,19.7120],[49.2385,19.7045],[49.2486,19.7106]]},
+    {id:'baranec',name:'A1 Baranec → Smrek',group:'alt',color:'#d2a94f',pts:[[49.1555,19.7145],[49.1645,19.7310],[49.1760,19.7410],[49.1810,19.7415],[49.1885,19.7290],[49.1925,19.7175],[49.1690,19.7120],[49.1555,19.7145]]},
+    {id:'brestova',name:'A2 Brestová → Salatín',group:'alt',color:'#69c0b5',pts:[[49.2505,19.6975],[49.2400,19.6860],[49.2310,19.6740],[49.2210,19.6710],[49.2310,19.6740],[49.2400,19.6860],[49.2505,19.6975]]},
+    {id:'starorob',name:'A3 Trzydniowiański → Starorobociański',group:'alt',color:'#b58edb',pts:[[49.2828,19.8426],[49.259623,19.815546],[49.239751,19.806092],[49.219094,19.803736],[49.205638,19.807545],[49.199366,19.819931],[49.2110,19.8310],[49.2300,19.8210],[49.259623,19.815546],[49.2828,19.8426]]},
+    {id:'babia',name:'Babia Góra / Diablak',group:'alt',color:'#c28d55',pts:[[49.5878,19.5819],[49.5815,19.5665],[49.5770,19.5530],[49.57317,19.52947],[49.5790,19.5160],[49.5930,19.5270],[49.5970,19.5500],[49.5878,19.5819]]},
+    {id:'koscieliska',name:'Lekki deszcz: Dolina Kościeliska → Ornak',group:'rain',color:'#5ea8d9',pts:[[49.2770,19.8649],[49.2680,19.8610],[49.2540,19.8560],[49.2445,19.8490],[49.2355,19.8425],[49.2265,19.8430],[49.2265,19.8430],[49.2355,19.8425],[49.2540,19.8560],[49.2770,19.8649]]},
+    {id:'chocholowska',name:'Lekki deszcz: Dolina Chochołowska → schronisko',group:'rain',color:'#72b7e4',pts:[[49.2828,19.8426],[49.2596,19.8155],[49.2443,19.8116],[49.2398,19.8061],[49.2364,19.7938],[49.2358,19.7896],[49.2364,19.7938],[49.2398,19.8061],[49.2596,19.8155],[49.2828,19.8426]]}
+  ];
+  const groupMap={main:mainGroup,alt:altGroup,rain:rainGroup};
+  routes.forEach(r=>{
+    const line=L.polyline(r.pts,{color:r.color,weight:r.group==='main'?5:4,opacity:.88,dashArray:r.group==='alt'?'8 7':(r.group==='rain'?'3 7':null)}).bindPopup('<b>'+r.name+'</b><br><small>Przebieg orientacyjny po kluczowych punktach — nie używaj jako jedynej nawigacji.</small>');
+    line.addTo(groupMap[r.group]);routeLayers[r.id]=line;
+  });
+
+  function icon(emoji,cls){return L.divIcon({html:emoji,className:'place-icon '+cls,iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-14]});}
+  const places=[
+    {name:'Bystre / Zakopane — sugerowana baza',p:[49.2920,19.9700],type:'base',txt:'Dobry kompromis pod Kuźnice, Kiry i wyjazdy na wschód.'},
+    {name:'Kiry — parkingi przy wejściu do doliny',p:[49.2770,19.8649],type:'parking',txt:'Start Doliny Kościeliskiej; do Czerwonych Wierchów wygodny również dojazd busem.'},
+    {name:'Siwa Polana — parkingi',p:[49.2828,19.8426],type:'parking',txt:'Start na Chochołowską, Wołowiec i część wariantów zachodnich.'},
+    {name:'Palenica Białczańska — parking TPN',p:[49.2557,20.1023],type:'parking',txt:'Start Szpiglasowego. Rezerwacja parkingu z wyprzedzeniem.'},
+    {name:'Kuźnice — punkt transportowy',p:[49.2691,19.9818],type:'transport',txt:'Start/koniec kilku tras; nie zakładaj prywatnego parkingu w samych Kuźnicach.'},
+    {name:'Zverovka — parking / start Rohaczy',p:[49.2486,19.7106],type:'parking',txt:'Główny start pętli Rohaczy.'},
+    {name:'Žiarska dolina — parking',p:[49.1555,19.7145],type:'parking',txt:'Start wariantu Baranec → Smrek.'},
+    {name:'Roháče–Spálená — parking',p:[49.2505,19.6975],type:'parking',txt:'Start wariantu Brestová → Salatín.'},
+    {name:'Przełęcz Krowiarki — parking',p:[49.5878,19.5819],type:'parking',txt:'Start planu Babia Góra / KGP.'}
+  ];
+  const placeMarkers=[];
+  places.forEach(x=>{const m=L.marker(x.p,{icon:icon(x.type==='base'?'🏠':x.type==='transport'?'🚌':'🅿️',x.type==='base'?'base-icon':x.type==='transport'?'transport-icon':'parking-icon')}).bindPopup('<b>'+x.name+'</b><br>'+x.txt).addTo(placeGroup);placeMarkers.push(m);});
+
+  // Editable lodging marker
+  let storedBase=null;try{storedBase=JSON.parse(localStorage.getItem('tatry_custom_base'));}catch(e){}
+  let customBase=null;
+  function setCustomBase(latlng){
+    if(customBase) placeGroup.removeLayer(customBase);
+    customBase=L.marker(latlng,{draggable:true,icon:icon('🏠','base-icon')}).bindPopup('<b>Wasz nocleg</b><br>Pozycja zapisana lokalnie.').addTo(placeGroup).openPopup();
+    localStorage.setItem('tatry_custom_base',JSON.stringify([latlng.lat,latlng.lng]));
+    customBase.on('dragend',()=>{const p=customBase.getLatLng();localStorage.setItem('tatry_custom_base',JSON.stringify([p.lat,p.lng]));});
+  }
+  if(storedBase&&storedBase.length===2)setCustomBase(L.latLng(storedBase[0],storedBase[1]));
+  let baseMode=false;
+  document.getElementById('setBase').addEventListener('click',()=>{baseMode=true;document.getElementById('setBase').textContent='Kliknij teraz miejsce noclegu…';});
+  map.on('click',e=>{if(baseMode){setCustomBase(e.latlng);baseMode=false;document.getElementById('setBase').textContent='Ustaw własny nocleg na mapie';}});
+
+  L.control.layers(null,{'Trasy główne':mainGroup,'Alternatywy':altGroup,'Lekki deszcz':rainGroup,'Parkingi / baza':placeGroup},{collapsed:false}).addTo(map);
+  function fitLayers(ls){const fg=L.featureGroup(ls);if(fg.getLayers().length)map.fitBounds(fg.getBounds().pad(.08));}
+  document.getElementById('fitAll').addEventListener('click',()=>fitLayers([...Object.values(routeLayers),...placeMarkers,...(customBase?[customBase]:[])]));
+  document.querySelectorAll('[data-fit]').forEach(b=>b.addEventListener('click',()=>{const l=routeLayers[b.dataset.fit];if(l){map.fitBounds(l.getBounds().pad(.15));l.openPopup();}}));
+  fitLayers([...Object.values(routeLayers),...placeMarkers]);
+</script>
+
+<script>
+  // PWA registration (GitHub Pages / HTTPS).
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
